@@ -1,0 +1,52 @@
+* {
+    font-family: system-ui, -apple-system, -apple-system-font, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+body {
+    background-color: mintcream;
+    width: 940px;
+}
+table {
+    border-collapse: collapse;
+}
+caption {
+    margin-bottom: 10px;
+}
+td {
+    width: 8%;
+    text-align: right;
+}
+tbody tr:first-of-type {
+    border-top: solid 1px black;
+}
+tr:nth-child(even) {
+    background-color: aliceblue;
+}
+tbody tr th {
+    font-weight: unset;
+    font-style: italic;
+    text-align: left;
+}
+tr:hover * {
+    background-color: gray;
+    color: mintcream;
+}
+a {
+    text-decoration: none;   
+}
+@keyframes blink {
+  25% { 
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  75% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0.1;
+  }
+}
+.wait-for-it {
+  animation: blink 5s step-start 0s infinite;
+}
