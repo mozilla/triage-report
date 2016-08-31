@@ -34,22 +34,62 @@ tbody tr th {
     font-style: italic;
     text-align: left;
 }
-tr:hover {
+tr:hover * {
     background-color: gray;
     color: mintcream;
-    cursor: pointer;
+}
+a {
+    text-decoration: none;   
+}
+@keyframes blink {
+  25% { 
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  75% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0.1;
+  }
+}
+.wait-for-it {
+  animation: blink 5s step-start 0s infinite;
 }
 </style>
 </head>
 <body>
 <h1>Untriaged Bugs in Firefox Components</h1>
-<div class="view">Loading…</div>
+<div class="view">Loading<span class="wait-for-it">…</span></div>
 <div>
-    <p><small>Mozilla Public<br>Requires ES6 arrow functions and fetch</small></p>
+    <p><small>Mozilla Public<br>
+    Public bugs only (logged in Bugzilla users may see more bugs when clicking through to bug lists)<br>
+    Requires ES6 arrow functions and fetch</small></p>
 </div>
 
 <script>
 (function() {
+    var CONST_NUMBER_OF_COMPONENTS = 5; // how many components to show in the report
+
+    // base bugzilla API query 
+    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
+    var baseRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
+
+    // convenience method for making links
+    function buglistLink(value, product, component, priority) {
+        priority = priority || null;
+        var productEncoded = encodeURIComponent(product);
+        var componentEncoded = encodeURIComponent(component);
+        var url = `${baseRequest}&product=${productEncoded}&component=${componentEncoded}`;
+        if (priority) {
+            url = `${url}&priority=${priority}`;
+        }
+        var link = `<a target="_blank" href="${url}">${value}</a>`;
+        return link;
+    }
+
     var view = document.querySelector('.view');
 
     if (!fetch) {
@@ -61,7 +101,7 @@ tr:hover {
     // which don't have a pending needinfo, and are not in the general and untriaged components
     // this does not include security filtered bugs 
 
-    fetch("https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged")
+    fetch(baseAPIRequest + "&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit")
         .then(function(response) { // $DEITY, get await in production, people
             if (response.ok) {  
                 response.json()
@@ -119,17 +159,17 @@ tr:hover {
         // and hey, lookit those ES6 format strings!
         Object.keys(report).forEach(product => {
             reportRows = reportRows + `<tbody>`;
-            report[product].slice(0,5).forEach(item => { // use Array().slice to get the top five
+            report[product].slice(0, CONST_NUMBER_OF_COMPONENTS).forEach(item => { // use Array().slice to get the top components 
                 var component = item.component;
                 reportRows = reportRows + `<tr>
                     <th>${product}: ${component}</th>
-                    <td>${data[product][component]['--']}</td>
-                    <td>${data[product][component].P1}</td>
-                    <td>${data[product][component].P2}</td>
-                    <td>${data[product][component].P3}</td>
-                    <td>${data[product][component].P4}</td>
-                    <td>${data[product][component].P5}</td>
-                    <td>${data[product][component].total}</td>
+                    <td>${buglistLink(data[product][component]['--'], product, component,'--')}</td>
+                    <td>${buglistLink(data[product][component].P1, product, component, 'P1')}</td>
+                    <td>${buglistLink(data[product][component].P2, product, component, 'P2')}</td>
+                    <td>${buglistLink(data[product][component].P3, product, component, 'P3')}</td>
+                    <td>${buglistLink(data[product][component].P4, product, component, 'P4')}</td>
+                    <td>${buglistLink(data[product][component].P5, product, component, 'P5')}</td>
+                    <td>${buglistLink(data[product][component].total, product, component)}</td>
                 </tr>`;
                 // add to top components total
                 top['--'] += data[product][component]['--'];
@@ -145,7 +185,7 @@ tr:hover {
 
         // glue it all together
         reportTable = `<table>
-            <caption>Open bugs filed since June 1st, 2016 without outstanding needinfo requests</caption>
+            <caption>Open bugs filed since June 1st, 2016 without outstanding needinfo requests (links are to corresponding Bugzilla buglists)</caption>
                 <thead>
                     <tr>
                         <th>Product: Component</th>
