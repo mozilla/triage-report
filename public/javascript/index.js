@@ -18,7 +18,8 @@
         return link;
     }
 
-    var view = document.querySelector('.view');
+    var tmp = document.querySelector('.tmp');
+    var tableOuter = document.querySelector('table thead');
 
     if (!fetch) {
         view.innerHTML = "Your browser does not support the fetch standard, which is needed to load this page.";
@@ -112,21 +113,7 @@
         });
 
         // glue it all together
-        reportTable = `<table>
-            <caption>Open bugs filed since June 1st, 2016 without outstanding needinfo requests (links are to corresponding Bugzilla buglists)</caption>
-                <thead>
-                    <tr>
-                        <th>Product: Component</th>
-                        <th>Untriaged</th>
-                        <th>Now</th>
-                        <th>Next</th>
-                        <th>Backlog</th>
-                        <th>N/A</th>
-                        <th>Take Patch</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                ${reportRows}
+        reportTable = `${reportRows}
                 <tbody>
                     <tr>
                         <th>All Components</th>
@@ -148,11 +135,11 @@
                         <td>${top.P5}</td>
                         <td>${top.total}</td>                   
                     </tr>
-               </tbody>
-        </table>`;
+               </tbody>`;
 
         // put the report in the document
-        view.innerHTML = reportTable;
+        tmp.remove();
+        tableOuter.insertAdjacentHTML('afterend', reportTable);
 
     }
 })();
