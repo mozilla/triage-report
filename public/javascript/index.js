@@ -36,6 +36,7 @@
                 response.json()
                 .then(function(result) {
                     process(result);
+                    setLastRunDate();
                 });
             }
         });
@@ -141,6 +142,10 @@
         tmp.remove();
         tableOuter.insertAdjacentHTML('afterend', reportTable);
 
+    }
+
+    function setLastRunDate() {
+        document.querySelector('.updated p').insertAdjacentText('afterbegin', `Last updated at ${new Date().toTimeString()}; reload page to update.`);
     }
 })();
 

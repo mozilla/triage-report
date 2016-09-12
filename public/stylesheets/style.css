@@ -4,6 +4,7 @@
 body {
     background-color: mintcream;
     width: 940px;
+    padding: 1.25em;
 }
 table {
     border-collapse: collapse;
