@@ -3,14 +3,14 @@
 
     // base bugzilla API query 
     var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&limit=10000";
-    var baseRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
+    var reportDetailRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
 
     // convenience method for making links
     function buglistLink(value, product, component, priority) {
         priority = priority || null;
         var productEncoded = encodeURIComponent(product);
         var componentEncoded = encodeURIComponent(component);
-        var url = `${baseRequest}&product=${productEncoded}&component=${componentEncoded}`;
+        var url = `${reportDetailRequest}&product=${productEncoded}&component=${componentEncoded}`;
         if (priority) {
             url = `${url}&priority=${priority}`;
         }
