@@ -1,8 +1,17 @@
 (function() {
     var CONST_NUMBER_OF_COMPONENTS = 5; // how many components to show in the report
 
+    // FIXME: don't use hard coded months, move to using 'last' bug number
+    var months = ["2016-06-01", "2016-07-01", "2016-08-01", "2016-09-01", "2016-10-01",
+         "2016-11-01", "2016-12-01"]; 
+
+    var result = { bugs: [] };
+
+    var completed = 0;
+
     // base bugzilla API query 
-    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&limit=10000";
+    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&f1=flagtypes.name&f2=component&f3=component&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&limit=10000";
+
     var reportDetailRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
 
     // convenience method for making links
@@ -30,16 +39,35 @@
     // which don't have a pending needinfo, and are not in the general and untriaged components
     // this does not include security filtered bugs 
 
-    fetch(baseAPIRequest + "&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit")
-        .then(function(response) { // $DEITY, I can't wait for await 
-            if (response.ok) {  
-                response.json()
-                .then(function(result) {
-                    process(result);
-                    setLastRunDate();
-                });
-            }
-        });
+    months.forEach(function(month, i) {
+        var next;
+
+        // get the month bins for the request
+        if (i < (months.length - 1)) {
+            next = months[i + 1];
+        } else {
+            next = 'NOW';
+        }
+
+        fetch(baseAPIRequest 
+                + "&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit&chfieldfrom="
+                + month + "&chfieldto=" + next)
+            .then(function(response) { // $DEITY, I can't wait for await 
+                if (response.ok) {  
+                    response.json()
+                    .then(function(data) {
+                        completed ++;
+                        console.log("completed", completed);
+                        Array.prototype.push.apply(result.bugs, data.bugs); // call push on each result.bugs
+                        if (completed === months.length) { 
+                            console.log("all fetched!");
+                            process(result);
+                            setLastRunDate();
+                        }
+                    });
+                }
+            });
+    });
 
     function process(result) {
 
