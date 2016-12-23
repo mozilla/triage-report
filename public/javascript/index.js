@@ -1,16 +1,11 @@
 (function() {
     var CONST_NUMBER_OF_COMPONENTS = 5; // how many components to show in the report
-
-    // FIXME: don't use hard coded months, move to using 'last' bug number
-    var months = ["2016-06-01", "2016-07-01", "2016-08-01", "2016-09-01", "2016-10-01",
-         "2016-11-01", "2016-12-01"]; 
-
     var result = { bugs: [] };
-
+    var limit = sizeOfResult = 500;
     var completed = 0;
 
     // base bugzilla API query 
-    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&f1=flagtypes.name&f2=component&f3=component&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&limit=10000";
+    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&f1=flagtypes.name&f2=component&f3=component&f4=bug_id&o1=notequals&o2=notequals&o3=notequals&o4=greaterthan&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&limit=" + limit;
 
     var reportDetailRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
 
@@ -35,39 +30,52 @@
         return;        
     }
 
-    // This fetches all the open bugs in Firefox related components opened since June 1st, 2016
+    // This recursively fetches all the open bugs in Firefox related components opened since June 1st, 2016
     // which don't have a pending needinfo, and are not in the general and untriaged components
     // this does not include security filtered bugs 
 
-    months.forEach(function(month, i) {
-        var next;
-
-        // get the month bins for the request
-        if (i < (months.length - 1)) {
-            next = months[i + 1];
-        } else {
-            next = 'NOW';
-        }
-
+    function getBugs(last) {
+        var newLast;
         fetch(baseAPIRequest 
-                + "&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit&chfieldfrom="
-                + month + "&chfieldto=" + next)
+            + "&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit&chfieldfrom="
+            + "2016-06-01&chfieldto=NOW&v4=" + last)
             .then(function(response) { // $DEITY, I can't wait for await 
                 if (response.ok) {  
                     response.json()
                     .then(function(data) {
-                        completed ++;
-                        console.log("completed", completed);
-                        Array.prototype.push.apply(result.bugs, data.bugs); // call push on each result.bugs
-                        if (completed === months.length) { 
-                            console.log("all fetched!");
-                            process(result);
-                            setLastRunDate();
+                        newLast = data.bugs[data.bugs.length - 1].id;
+                        /* 
+                            There are two ways we can fall out of this recursion: if the total
+                            number of bugs is evenly divisible by limit (edge case) then we'll 
+                            err on fetching a result set twice, but not adding it, or if the number
+                            of bugs in the batch returned is less than the limit, we'll add the last
+                            batch and stop 
+                        */
+                        if (newLast != last) {
+                            completed ++;
+                            console.log("completed", completed, "fetches");
+                            Array.prototype.push.apply(result.bugs, data.bugs); // call push on each result.bugs
+                            if (data.bugs.length === limit) {
+                                console.log("calling again with last", newLast);
+                                getBugs(newLast); // recursively call using the id of the last bug in the results as last                               
+                            } else {
+                                console.log("less bugs than limit");
+                                complete();
+                            }
+                        } else {
+                            console.log("edge case");
+                            complete();
                         }
                     });
                 }
             });
-    });
+    }
+
+    function complete() {
+        console.log("all fetched!");
+        process(result);
+        setLastRunDate();
+    }
 
     function process(result) {
 
@@ -175,5 +183,9 @@
     function setLastRunDate() {
         document.querySelector('.updated p').insertAdjacentText('afterbegin', `Last updated at ${new Date().toTimeString()}; reload page to update.`);
     }
+
+    getBugs(0);
+
+
 })();
 
