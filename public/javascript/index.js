@@ -5,9 +5,9 @@
     var completed = 0;
 
     // base bugzilla API query 
-    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&f1=flagtypes.name&f2=component&f3=component&f4=bug_id&o1=notequals&o2=notequals&o3=notequals&o4=greaterthan&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&limit=" + limit;
+    var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&f1=flagtypes.name&f2=component&f3=component&f4=bug_id&o1=notequals&o2=notequals&o3=notequals&o4=greaterthan&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&email1=intermittent-bug-filer%40mozilla.bugs&emailtype1=notequals&emailreporter1=1&limit=" + limit;
 
-    var reportDetailRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged";
+    var reportDetailRequest = "https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]&chfieldfrom=2016-06-01&chfieldto=Now&f1=flagtypes.name&f2=component&f3=component&limit=0&o1=notequals&o2=notequals&o3=notequals&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&email1=intermittent-bug-filer%40mozilla.bugs&emailtype1=notequals&emailreporter1=1";
 
     // convenience method for making links
     function buglistLink(value, product, component, priority) {
