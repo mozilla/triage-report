@@ -4,20 +4,16 @@
     var limit = sizeOfResult = 500;
     var completed = 0;
 
-    // base bugzilla API query 
-    var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?chfield=[Bug%20creation]' + // have to leave out chfield because '[', ']' can't be escaped
-        Object.entries({
+    // shared parameters
+    var sharedParameters = Object.entries({
           'chfieldfrom': '2016-06-01',
-          'chfieldto': 'NOW',
-          'include_fields': 'id,priority,product,component',  
+          'chfieldto': 'NOW', 
           'f1': 'flagtypes.name',
           'f2': 'component',
           'f3': 'component',
-          'f4': 'bug_id',
           'o1': 'notequals'
           'o2': 'notequals',
           'o3': 'notequals',
-          'o4': 'greaterthan',
           'resolution': '---',
           'v1': 'needinfo?'
           'v2': 'general',
@@ -26,32 +22,18 @@
           'emailtype1': 'notequals',
           'emailreporter1': 1,
           'limit': limit }).reduce((str, [key, value]) => str + `&${key}=${encodeURIComponent(value)}`, '');
+    
+    // base bugzilla API query 
+    var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]' + // have to leave out chfield because '[', ']' can't be escaped
+        sharedParameters + '&o4=greaterthan&f4=bug_id&limit=' + limit;
 
     var reportDetailRequest = 'https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]' +
-        Object.entries({
-            'chfieldfrom': '2016-06-01',
-            'chfieldto': 'NOW",
-            'f1': 'flagtypes.name',
-            'f2': 'component',
-            'f3': 'component',
-            'limit': 0',
-            'o1': 'notequals',
-            'o2': 'notequals', 
-            'o3': 'notequals',
-            'resolution': '---',
-            'v1': 'needinfo?',
-            'v2': 'general',
-            'v3': 'untriaged',
-            'email1': 'intermittent-bug-filer@mozilla.bugs',
-            'emailtype1': 'notequals'
-            'emailreporter1': 1}).reduce((str, [key, value]) => str + `&${key}=${encodeURIComponent(value)}`, ''); 
+        sharedParameters; 
 
     // convenience method for making links
     function buglistLink(value, product, component, priority) {
         priority = priority || null;
-        var productEncoded = encodeURIComponent(product);
-        var componentEncoded = encodeURIComponent(component);
-        var url = `${reportDetailRequest}&product=${productEncoded}&component=${componentEncoded}`;
+        var url = `${reportDetailRequest}&product=${encodeURIComponent(product)}&component=${encodeURIComponent(component)}`;
         if (priority) {
             url = `${url}&priority=${priority}`;
         }
