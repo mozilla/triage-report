@@ -15,7 +15,7 @@
           'o2': 'notequals',
           'o3': 'notequals',
           'resolution': '---',
-          'v1': 'needinfo?'
+          'v1': 'needinfo?',
           'v2': 'general',
           'v3': 'untriaged',
           'email1': 'intermittent-bug-filer@mozilla.bugs',
