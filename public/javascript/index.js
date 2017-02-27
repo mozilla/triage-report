@@ -11,7 +11,7 @@
           'f1': 'flagtypes.name',
           'f2': 'component',
           'f3': 'component',
-          'o1': 'notequals'
+          'o1': 'notequals',
           'o2': 'notequals',
           'o3': 'notequals',
           'resolution': '---',
@@ -20,8 +20,8 @@
           'v3': 'untriaged',
           'email1': 'intermittent-bug-filer@mozilla.bugs',
           'emailtype1': 'notequals',
-          'emailreporter1': 1,
-          'limit': limit }).reduce((str, [key, value]) => str + `&${key}=${encodeURIComponent(value)}`, '');
+          'emailreporter1': 1
+    }).reduce((str, [key, value]) => str + `&${key}=${encodeURIComponent(value)}`, '');
     
     // base bugzilla API query 
     var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]' + // have to leave out chfield because '[', ']' can't be escaped
