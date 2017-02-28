@@ -3,6 +3,15 @@
     var result = { bugs: [] };
     var limit = sizeOfResult = 500;
     var completed = 0;
+    // Bugzilla Products of interest
+    var productList = [
+          "Core"
+        , "Firefox"
+        , "Firefox for Android"
+        , "Firefox for iOS"
+        , "Toolkit"
+    ];
+    var encodedProductListFragment = productList.reduce((str, product) => str + `&product=${encodeURIComponent(product)}`, '');
 
     // base bugzilla API query 
     var baseAPIRequest = "https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]&f1=flagtypes.name&f2=component&f3=component&f4=bug_id&o1=notequals&o2=notequals&o3=notequals&o4=greaterthan&resolution=---&v1=needinfo%3F&v2=general&v3=untriaged&email1=intermittent-bug-filer%40mozilla.bugs&emailtype1=notequals&emailreporter1=1&limit=" + limit;
@@ -34,10 +43,12 @@
     // which don't have a pending needinfo, and are not in the general and untriaged components
     // this does not include security filtered bugs 
 
+
     function getBugs(last) {
         var newLast;
         fetch(baseAPIRequest 
-            + "&product=Core&product=Firefox&product=Firefox%20for%20Android&product=Firefox%20for%20iOS&product=Toolkit&chfieldfrom="
+            + encodedProductListFragment
+            + "&chfieldfrom="
             + "2016-06-01&chfieldto=NOW&v4=" + last)
             .then(function(response) { // $DEITY, I can't wait for await 
                 if (response.ok) {  
