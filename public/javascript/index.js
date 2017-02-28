@@ -3,6 +3,15 @@
     var result = { bugs: [] };
     var limit = sizeOfResult = 500;
     var completed = 0;
+    // Bugzilla Products of interest
+    var productList = [
+          "Core"
+        , "Firefox"
+        , "Firefox for Android"
+        , "Firefox for iOS"
+        , "Toolkit"
+    ];
+    var encodedProductListFragment = productList.reduce((str, product) => str + `&product=${encodeURIComponent(product)}`, '');
 
     // shared parameters
     var sharedParameters = Object.entries({
@@ -52,6 +61,7 @@
     // This recursively fetches all the open bugs in Firefox related components opened since June 1st, 2016
     // which don't have a pending needinfo, and are not in the general and untriaged components
     // this does not include security filtered bugs 
+
 
     function getBugs(last) {
         var newLast;
