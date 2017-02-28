@@ -33,8 +33,10 @@
     }).reduce((str, [key, value]) => str + `&${key}=${encodeURIComponent(value)}`, '');
     
     // base bugzilla API query 
-    var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?include_fields=id,priority,product,component&chfield=[Bug%20creation]' + // have to leave out chfield because '[', ']' can't be escaped
-        sharedParameters + '&o4=greaterthan&f4=bug_id&limit=' + limit;
+    var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?' + 
+                         'include_fields=id,priority,product,component&chfield=[Bug%20creation]' + 
+                         encodedProductListFragment + sharedParameters + 
+                         '&o4=greaterthan&f4=bug_id&limit=' + limit;
 
     var reportDetailRequest = 'https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]' +
         sharedParameters; 
