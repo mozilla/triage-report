@@ -1,7 +1,7 @@
 (function() {
     var CONST_NUMBER_OF_COMPONENTS = 5; // how many components to show in the report
     var result = { bugs: [] };
-    var limit = sizeOfResult = 500;
+    var limit = sizeOfResult = 10000;
     var completed = 0;
     // Bugzilla Products of interest
     var productList = [
