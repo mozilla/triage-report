@@ -1,5 +1,4 @@
 (function() {
-    var CONST_NUMBER_OF_COMPONENTS = 5; // how many components to show in the report
     var result = { bugs: [] };
     var limit = sizeOfResult = 10000;
     var completed = 0;
@@ -114,8 +113,6 @@
         var reportRows = '';
         var reportTable = '';
         var all = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
-        var top = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
-
         // count bugs by product, component, and priority
         result.bugs.forEach((bug, i) => {
             if (!data[bug.product]) {
@@ -150,11 +147,9 @@
             });
         });
 
-        // print the top five untriaged components in each product
-        // and hey, lookit those ES6 format strings!
         Object.keys(report).forEach(product => {
             reportRows = reportRows + `<tbody>`;
-            report[product].slice(0, CONST_NUMBER_OF_COMPONENTS).forEach(item => { // use Array().slice to get the top components 
+            report[product].forEach(item => {  
                 var component = item.component;
                 reportRows = reportRows + `<tr>
                     <th>${product}: ${component}</th>
@@ -166,14 +161,6 @@
                     <td>${buglistLink(data[product][component].P5, product, component, 'P5')}</td>
                     <td>${buglistLink(data[product][component].total, product, component)}</td>
                 </tr>`;
-                // add to top components total
-                top['--'] += data[product][component]['--'];
-                top.P1 += data[product][component].P1;
-                top.P2 += data[product][component].P2;
-                top.P3 += data[product][component].P3;
-                top.P4 += data[product][component].P4;
-                top.P5 += data[product][component].P5;
-                top.total += data[product][component].total;
             });
             reportRows = reportRows + `</tbody>`;        
         });
@@ -190,16 +177,6 @@
                         <td>${all.P4}</td>
                         <td>${all.P5}</td>
                         <td>${all.total}</td>                   
-                    </tr>
-                     <tr>
-                        <th>Top Components</th>
-                        <td>${top['--']}</td>
-                        <td>${top.P1}</td>
-                        <td>${top.P2}</td>
-                        <td>${top.P3}</td>
-                        <td>${top.P4}</td>
-                        <td>${top.P5}</td>
-                        <td>${top.total}</td>                   
                     </tr>
                </tbody>`;
 
