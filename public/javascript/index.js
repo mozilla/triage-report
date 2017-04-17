@@ -1,4 +1,5 @@
 (function() {
+    var CONST_REGRESSIONS_PER_N_BUGS = 50; // swag here
     var result = { bugs: [] };
     var limit = sizeOfResult = 10000;
     var completed = 0;
@@ -151,9 +152,10 @@
             reportRows = reportRows + `<tbody>`;
             report[product].forEach(item => {  
                 var component = item.component;
+                var risk = Math.min(Math.floor(data[product][component]['--'] / CONST_REGRESSIONS_PER_N_BUGS), 5);
                 reportRows = reportRows + `<tr>
                     <th>${product}: ${component}</th>
-                    <td>${buglistLink(data[product][component]['--'], product, component,'--')}</td>
+                    <td class="risk${risk} untriaged">${buglistLink(data[product][component]['--'], product, component,'--')}</td>
                     <td>${buglistLink(data[product][component].P1, product, component, 'P1')}</td>
                     <td>${buglistLink(data[product][component].P2, product, component, 'P2')}</td>
                     <td>${buglistLink(data[product][component].P3, product, component, 'P3')}</td>

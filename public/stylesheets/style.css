@@ -51,3 +51,23 @@ a {
 .wait-for-it {
   animation: blink 5s step-start 0s infinite;
 }
+
+.untriaged {
+    text-align: center;
+}
+
+.risk1 {
+    background-color: #ffcccc;
+}
+.risk2 {
+    background-color: #ff7f7f;
+}
+.risk3 {
+    background-color: #ff4c4c;
+}
+.risk4 {
+    background-color: #ff3232;
+}
+.risk5 {
+    background-color: #ff0000;
+}
