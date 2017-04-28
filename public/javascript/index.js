@@ -108,6 +108,8 @@
         var reportRows = '';
         var reportTable = '';
         var all = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
+        var allNotGeneral = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
+
         // count bugs by product, component, and priority
         result.bugs.forEach((bug, i) => {
             if (!data[bug.product]) {
@@ -128,6 +130,10 @@
             all.total ++;
             data[bug.product][bug.component][bug.priority] ++;
             all[bug.priority] ++;
+            if (['general', 'untriaged'].indexOf(bug.component.toLowerCase()) < 0) {
+                allNotGeneral.total ++;
+                allNotGeneral[bug.priority] ++;
+            }
         });
 
         // generate a report by product of the components sorted 
@@ -163,7 +169,7 @@
 
         // glue it all together
         reportTable = `${reportRows}
-                <tbody>
+               <tbody>
                     <tr>
                         <th>All Components</th>
                         <td>${all['--']}</td>
@@ -174,6 +180,16 @@
                         <td>${all.P5}</td>
                         <td>${all.total}</td>                   
                     </tr>
+               </tbody>
+               <tbody>
+                        <th>W/O General and Untriaged</th>
+                        <td>${allNotGeneral['--']}</td>
+                        <td>${allNotGeneral.P1}</td>
+                        <td>${allNotGeneral.P2}</td>
+                        <td>${allNotGeneral.P3}</td>
+                        <td>${allNotGeneral.P4}</td>
+                        <td>${allNotGeneral.P5}</td>
+                        <td>${allNotGeneral.total}</td>  
                </tbody>`;
 
         // put the report in the document
