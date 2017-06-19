@@ -71,3 +71,27 @@ a {
 .risk5 {
     background-color: #ff0000;
 }
+
+
+ul {
+    list-style: none;
+    margin-top: 0;
+    padding-left: 0;
+}
+
+#report:target {
+    display: default;
+}
+
+#date-report:not(:target) {
+        display:none;
+}
+
+#date-report:target {
+    display: default;
+}
+
+#report:not(:target) {
+    display: none;
+}
+

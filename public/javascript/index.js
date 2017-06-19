@@ -28,7 +28,8 @@
     
     // base bugzilla API query 
     var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?' + 
-                         'include_fields=id,priority,product,component&chfield=[Bug%20creation]' + 
+                         'include_fields=id,priority,product,component,creation_time' +
+                         '&chfield=[Bug%20creation]' + 
                          encodedProductListFragment + sharedParameters + 
                          '&o4=greaterthan&f4=bug_id&limit=' + limit;
 
@@ -47,7 +48,10 @@
     }
 
     var tmp = document.querySelector('.tmp');
-    var tableOuter = document.querySelector('table thead');
+    var tableOuter = document.querySelector('table.report thead');
+
+    var dateTmp = document.querySelector('.dateTmp');
+    var dateTableOuter = document.querySelector('table.dateReport thead');
 
     if (!fetch) {
         view.innerHTML = "Your browser does not support the fetch standard, which is needed to load this page.";
@@ -109,9 +113,19 @@
         var reportTable = '';
         var all = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
         var allNotGeneral = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
+        var dateData = {};
+        var dateReport = {};
+        var dateReportHeader = '';
+        var dateReportRows = '';
+        var dateReportTable = '';
+        var dateFiled;
+        var monthFiled;
+        var months = {};
+        var monthList = [];
+        var monthNum;
 
-        // count bugs by product, component, and priority
         result.bugs.forEach((bug, i) => {
+            // count bugs by product, component, and priority
             if (!data[bug.product]) {
                 data[bug.product] = {}; // add new product   
             }
@@ -133,6 +147,43 @@
             if (['general', 'untriaged'].indexOf(bug.component.toLowerCase()) < 0) {
                 allNotGeneral.total ++;
                 allNotGeneral[bug.priority] ++;
+            }
+
+            // count untriaged bugs by product, component, and month filed
+            if (bug.priority === '--') {
+                dateFiled = new Date(bug.creation_time);
+                monthNum = dateFiled.getUTCMonth() + 1;
+                // left pad 
+                if (monthNum < 10) {
+                    monthNum = '0' + monthNum;
+                }
+                monthFiled = dateFiled.getUTCFullYear() + '-' + monthNum;
+                // create months column heads
+                if (!months[monthFiled]) {
+                    months[monthFiled] = monthFiled;
+                }
+
+                // count bug
+                if (!dateData[bug.product]) {
+                    dateData[bug.product] = {}; // add new product
+                }
+                if (!dateData[bug.product][bug.component]) {
+                    dateData[bug.product][bug.component] = {} // add new component
+                }
+                if (!dateData[bug.product][bug.component][monthFiled]) {
+                    dateData[bug.product][bug.component][monthFiled] = 1;
+                }
+                else {
+                    dateData[bug.product][bug.component][monthFiled] ++
+                }
+
+                // count total untriaged in product component for sorting later
+                if (!dateData[bug.product][bug.component].untriaged) {
+                    dateData[bug.product][bug.component].untriaged = 1;
+                }
+                else {
+                    dateData[bug.product][bug.component].untriaged ++;
+                }
             }
         });
 
@@ -196,6 +247,64 @@
         tmp.remove();
         tableOuter.insertAdjacentHTML('afterend', reportTable);
 
+        // transform the object with the months into a sorted array
+
+        Object.keys(months).forEach(month => {
+            monthList.push(month);
+        });
+        monthList = monthList.sort();
+
+        // generate a report by product of the components sorted 
+        // by the most untriaged bugs, descending
+        Object.keys(dateData).forEach(product => {
+            var list = [];
+            Object.keys(dateData[product]).forEach(component => {
+                var data = {component: component, untriaged: dateData[product][component].untriaged};
+                monthList.forEach(month => {
+                    data[month] = dateData[product][component][month];
+                });
+                list.push(data);
+            });
+            dateReport[product] = list.sort((a, b) => {
+                return b.untriaged - a.untriaged; // sort in descending order
+            });
+        });
+
+
+        dateReportHeader = `<tr>
+                                <th>Product: Component</th>
+                                <th>Untrigaged</th>`;
+
+        monthList.forEach(month => {
+            dateReportHeader += `<th>${month}</th>`;
+        });
+
+        dateReportHeader += `</tr>`;
+
+        Object.keys(dateReport).forEach(product => {
+            dateReportRows = dateReportRows + `<tbody>`;
+            dateReport[product].forEach(item => {  
+                var component = item.component;
+                dateReportRows = dateReportRows + `<tr>
+                    <th>${product}: ${component}</th>
+                    <td>${item.untriaged}</td>`;
+
+                monthList.forEach(month => {
+                    var count = item[month] || 0;
+                    dateReportRows += `<td>${count}</td>`;
+                });
+
+                dateReportRows += `</tr>`;
+            });
+            dateReportRows += `</tbody>`;
+        });
+
+        dateReportTable = `${dateReportRows}`;
+
+        document.querySelector('table.dateReport thead')
+            .insertAdjacentHTML('afterbegin', dateReportHeader);
+        dateTmp.remove();
+        dateTableOuter.insertAdjacentHTML('afterend', dateReportTable);
     }
 
     function setLastRunDate() {
@@ -203,6 +312,8 @@
     }
 
     getBugs(0);
+
+    document.location.hash = 'report';
 
 
 })();
