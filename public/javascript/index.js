@@ -28,7 +28,8 @@
     
     // base bugzilla API query 
     var baseAPIRequest = 'https://bugzilla.mozilla.org/rest/bug?' + 
-                         'include_fields=id,priority,product,component&chfield=[Bug%20creation]' + 
+                         'include_fields=id,priority,product,component,creation_time' +
+                         '&chfield=[Bug%20creation]' + 
                          encodedProductListFragment + sharedParameters + 
                          '&o4=greaterthan&f4=bug_id&limit=' + limit;
 
@@ -47,7 +48,10 @@
     }
 
     var tmp = document.querySelector('.tmp');
-    var tableOuter = document.querySelector('table thead');
+    var tableOuter = document.querySelector('table.report thead');
+
+    var dateTmp = document.querySelector('.dateTmp');
+    var dateTableOuter = document.querySelector('table.dateReport thead');
 
     if (!fetch) {
         view.innerHTML = "Your browser does not support the fetch standard, which is needed to load this page.";
@@ -100,6 +104,10 @@
         setLastRunDate();
     }
 
+    function risk(count) {
+        return "risk" + Math.min(Math.floor(count / CONST_REGRESSIONS_PER_N_BUGS), 5);
+    }
+
     function process(result) {
 
         // stuff to collect results into
@@ -109,9 +117,21 @@
         var reportTable = '';
         var all = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
         var allNotGeneral = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
+        var dateData = {};
+        var dateReport = {};
+        var dateReportHeader = '';
+        var dateReportRows = '';
+        var dateReportTable = '';
+        var dateFiled;
+        var monthFiled;
+        var months = {};
+        var monthList = [];
+        var monthNum;
+        var nMonths;
+        var max = 0;
 
-        // count bugs by product, component, and priority
         result.bugs.forEach((bug, i) => {
+            // count bugs by product, component, and priority
             if (!data[bug.product]) {
                 data[bug.product] = {}; // add new product   
             }
@@ -134,6 +154,43 @@
                 allNotGeneral.total ++;
                 allNotGeneral[bug.priority] ++;
             }
+
+            // count untriaged bugs by product, component, and month filed
+            if (bug.priority === '--') {
+                dateFiled = new Date(bug.creation_time);
+                monthNum = dateFiled.getUTCMonth() + 1;
+                // left pad 
+                if (monthNum < 10) {
+                    monthNum = '0' + monthNum;
+                }
+                monthFiled = dateFiled.getUTCFullYear() + '-' + monthNum;
+                // create months column heads
+                if (!months[monthFiled]) {
+                    months[monthFiled] = monthFiled;
+                }
+
+                // count bug
+                if (!dateData[bug.product]) {
+                    dateData[bug.product] = {}; // add new product
+                }
+                if (!dateData[bug.product][bug.component]) {
+                    dateData[bug.product][bug.component] = {} // add new component
+                }
+                if (!dateData[bug.product][bug.component][monthFiled]) {
+                    dateData[bug.product][bug.component][monthFiled] = 1;
+                }
+                else {
+                    dateData[bug.product][bug.component][monthFiled] ++
+                }
+
+                // count total untriaged in product component for sorting later
+                if (!dateData[bug.product][bug.component].untriaged) {
+                    dateData[bug.product][bug.component].untriaged = 1;
+                }
+                else {
+                    dateData[bug.product][bug.component].untriaged ++;
+                }
+            }
         });
 
         // generate a report by product of the components sorted 
@@ -152,10 +209,10 @@
             reportRows = reportRows + `<tbody>`;
             report[product].forEach(item => {  
                 var component = item.component;
-                var risk = Math.min(Math.floor(data[product][component]['--'] / CONST_REGRESSIONS_PER_N_BUGS), 5);
+                var riskClass = risk(data[product][component]['--']);
                 reportRows = reportRows + `<tr>
                     <th>${product}: ${component}</th>
-                    <td class="risk${risk} untriaged">${buglistLink(data[product][component]['--'], product, component,'--')}</td>
+                    <td class="${riskClass} untriaged">${buglistLink(data[product][component]['--'], product, component,'--')}</td>
                     <td>${buglistLink(data[product][component].P1, product, component, 'P1')}</td>
                     <td>${buglistLink(data[product][component].P2, product, component, 'P2')}</td>
                     <td>${buglistLink(data[product][component].P3, product, component, 'P3')}</td>
@@ -196,6 +253,68 @@
         tmp.remove();
         tableOuter.insertAdjacentHTML('afterend', reportTable);
 
+        // transform the object with the months into a sorted array
+
+        Object.keys(months).forEach(month => {
+            monthList.push(month);
+        });
+        monthList = monthList.sort();
+        nMonths = monthList.length;
+
+        // generate a report by product of the components sorted 
+        // by the most untriaged bugs, descending, and track the
+        // largest value across all products, components, and months
+        Object.keys(dateData).forEach(product => {
+            var list = [];
+            Object.keys(dateData[product]).forEach(component => {
+                var data = {component: component, untriaged: dateData[product][component].untriaged};
+                monthList.forEach(month => {
+                    data[month] = dateData[product][component][month];
+
+                    // check for global max
+                    if (data[month] > max) {
+                        max = data[month];
+                    }
+
+                });
+                list.push(data);
+            });
+            dateReport[product] = list.sort((a, b) => {
+                return b.untriaged - a.untriaged; // sort in descending order
+            });
+        });
+
+        Object.keys(dateReport).forEach(product => {
+            dateReportRows = dateReportRows + `<tbody>`;
+            dateReport[product].forEach(item => {
+
+                var sum = 0, i = nMonths; // for averaging
+                var sparkdata = [];
+                var component = item.component;
+                var riskClass = risk(item.untriaged);
+
+                dateReportRows = dateReportRows + `<tr>
+                    <th>${product}: ${component}</th>
+                    <td class="${riskClass} untriaged">${item.untriaged}</td>`;
+
+                monthList.forEach(month => {
+                    var count = item[month] || 0;
+                    sparkdata.push(count);
+                    sum += count * i;
+                    i--;
+                });
+                
+                dateReportRows += `<td class="sparkline">${sparkline(sparkdata, {min: 0, max: max, html: true})}</td>`;
+
+                dateReportRows += `<td>${Math.round(sum/item.untriaged)}</td>`;
+
+                dateReportRows += `</tr>`;
+            });
+            dateReportRows += `</tbody>`;
+        });
+
+        dateTmp.remove();
+        dateTableOuter.insertAdjacentHTML('afterend', dateReportRows);
     }
 
     function setLastRunDate() {
@@ -203,6 +322,8 @@
     }
 
     getBugs(0);
+
+    document.location.hash = 'report';
 
 
 })();
