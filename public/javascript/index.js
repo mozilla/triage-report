@@ -128,6 +128,7 @@
         var monthList = [];
         var monthNum;
         var nMonths;
+        var max = 0;
 
         result.bugs.forEach((bug, i) => {
             // count bugs by product, component, and priority
@@ -261,13 +262,20 @@
         nMonths = monthList.length;
 
         // generate a report by product of the components sorted 
-        // by the most untriaged bugs, descending
+        // by the most untriaged bugs, descending, and track the
+        // largest value across all products, components, and months
         Object.keys(dateData).forEach(product => {
             var list = [];
             Object.keys(dateData[product]).forEach(component => {
                 var data = {component: component, untriaged: dateData[product][component].untriaged};
                 monthList.forEach(month => {
                     data[month] = dateData[product][component][month];
+
+                    // check for global max
+                    if (data[month] > max) {
+                        max = data[month];
+                    }
+
                 });
                 list.push(data);
             });
@@ -296,7 +304,7 @@
                     i--;
                 });
                 
-                dateReportRows += `<td class="sparkline">${sparkline(sparkdata, {min: 0})}</td>`;
+                dateReportRows += `<td class="sparkline">${sparkline(sparkdata, {min: 0, max: max, html: true})}</td>`;
 
                 dateReportRows += `<td>${Math.round(sum/item.untriaged)}</td>`;
 
