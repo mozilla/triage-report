@@ -27,7 +27,7 @@
       var value = ticks[~~(((numbers[i] - min) << 8) / f)];
 
       if (html) {
-        value = `<span title="${numbers[i]}">${value}</span>`;
+        value = '<span title="' + numbers[i] + '">' + value + '</span>';
       }
 
       results.push(value);
