@@ -104,6 +104,10 @@
         setLastRunDate();
     }
 
+    function risk(count) {
+        return "risk" + Math.min(Math.floor(count / CONST_REGRESSIONS_PER_N_BUGS), 5);
+    }
+
     function process(result) {
 
         // stuff to collect results into
@@ -123,6 +127,7 @@
         var months = {};
         var monthList = [];
         var monthNum;
+        var nMonths;
 
         result.bugs.forEach((bug, i) => {
             // count bugs by product, component, and priority
@@ -203,10 +208,10 @@
             reportRows = reportRows + `<tbody>`;
             report[product].forEach(item => {  
                 var component = item.component;
-                var risk = Math.min(Math.floor(data[product][component]['--'] / CONST_REGRESSIONS_PER_N_BUGS), 5);
+                var riskClass = risk(data[product][component]['--']);
                 reportRows = reportRows + `<tr>
                     <th>${product}: ${component}</th>
-                    <td class="risk${risk} untriaged">${buglistLink(data[product][component]['--'], product, component,'--')}</td>
+                    <td class="${riskClass} untriaged">${buglistLink(data[product][component]['--'], product, component,'--')}</td>
                     <td>${buglistLink(data[product][component].P1, product, component, 'P1')}</td>
                     <td>${buglistLink(data[product][component].P2, product, component, 'P2')}</td>
                     <td>${buglistLink(data[product][component].P3, product, component, 'P3')}</td>
@@ -253,6 +258,7 @@
             monthList.push(month);
         });
         monthList = monthList.sort();
+        nMonths = monthList.length;
 
         // generate a report by product of the components sorted 
         // by the most untriaged bugs, descending
@@ -270,41 +276,37 @@
             });
         });
 
-
-        dateReportHeader = `<tr>
-                                <th>Product: Component</th>
-                                <th>Untrigaged</th>`;
-
-        monthList.forEach(month => {
-            dateReportHeader += `<th>${month}</th>`;
-        });
-
-        dateReportHeader += `</tr>`;
-
         Object.keys(dateReport).forEach(product => {
             dateReportRows = dateReportRows + `<tbody>`;
-            dateReport[product].forEach(item => {  
+            dateReport[product].forEach(item => {
+
+                var sum = 0, i = nMonths; // for averaging
+                var sparkdata = [];
                 var component = item.component;
+                var riskClass = risk(item.untriaged);
+
                 dateReportRows = dateReportRows + `<tr>
                     <th>${product}: ${component}</th>
-                    <td>${item.untriaged}</td>`;
+                    <td class="${riskClass} untriaged">${item.untriaged}</td>`;
 
                 monthList.forEach(month => {
                     var count = item[month] || 0;
-                    dateReportRows += `<td>${count}</td>`;
+                    sparkdata.push(count);
+                    sum += count * i;
+                    i--;
                 });
+                
+                dateReportRows += `<td class="sparkline">${sparkline(sparkdata, {min: 0})}</td>`;
+
+                dateReportRows += `<td>${Math.round(sum/item.untriaged)}</td>`;
 
                 dateReportRows += `</tr>`;
             });
             dateReportRows += `</tbody>`;
         });
 
-        dateReportTable = `${dateReportRows}`;
-
-        document.querySelector('table.dateReport thead')
-            .insertAdjacentHTML('afterbegin', dateReportHeader);
         dateTmp.remove();
-        dateTableOuter.insertAdjacentHTML('afterend', dateReportTable);
+        dateTableOuter.insertAdjacentHTML('afterend', dateReportRows);
     }
 
     function setLastRunDate() {

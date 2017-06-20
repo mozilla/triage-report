@@ -16,6 +16,20 @@ td {
     width: 10%;
     text-align: right;
 }
+
+.dateReport td {
+    text-align: right;
+}
+
+.dateReport td.sparkline {
+    width: 40%;
+    text-align: center;
+}
+.dateReport td.sparkline span {
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    cursor: pointer;
+}
+
 tbody tr:first-of-type {
     border-top: solid 1px black;
 }
