@@ -93,6 +93,14 @@ ul {
     padding-left: 0;
 }
 
+#top:target {
+    display: default;
+}
+
+#top:not(:target) {
+    display: none;
+}
+
 #report:target {
     display: default;
 }

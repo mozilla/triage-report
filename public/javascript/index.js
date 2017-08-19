@@ -47,6 +47,9 @@
         return link;
     }
 
+    var topTmp = document.querySelector('.topTmp');
+    var topOuter = document.querySelector('table.topReport thead');
+
     var tmp = document.querySelector('.tmp');
     var tableOuter = document.querySelector('table.report thead');
 
@@ -113,6 +116,9 @@
         // stuff to collect results into
         var data = {};
         var report = {};
+        var allComponents = [];
+        var topComponents = [];
+        var topReport = '';
         var reportRows = '';
         var reportTable = '';
         var all = { '--': 0, P1: 0, P2: 0, P3: 0, P4: 0, P5: 0, total: 0 };
@@ -193,6 +199,32 @@
             }
         });
 
+        // generate a report of the top five components across all products with the most untriaged bugs
+        Object.keys(data).forEach(product => {
+            Object.keys(data[product]).forEach(component => {
+                allComponents.push({name: product + ': ' + component, untriaged: data[product][component]['--']});
+            });
+        });
+        allComponents.sort((a, b) => {
+            return b.untriaged - a.untriaged; // sort in descending order
+        });
+        topComponents = allComponents.slice(0, 10);
+        topReport = '<tbody>';
+ 
+        topComponents.forEach(component => {
+            var riskClass = risk(component.untriaged);
+            topReport = topReport + `<tr>
+                <th>${component.name}</th>
+                <td class="${riskClass} untriaged">${component.untriaged}</td>
+            </tr>`;
+        });
+
+        topReport = topReport + '</tbody>';
+
+        // put the report in the document
+        topTmp.remove();
+        topOuter.insertAdjacentHTML('afterend', topReport);
+        
         // generate a report by product of the components sorted 
         // by the most untriaged bugs, descending
         Object.keys(data).forEach(product => {
@@ -323,7 +355,7 @@
 
     getBugs(0);
 
-    document.location.hash = 'report';
+    document.location.hash = 'top';
 
 
 })();
