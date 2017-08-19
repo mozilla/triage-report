@@ -5,18 +5,34 @@
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Triage Report for Firefox Components - Public</title>
+        <link href="https://code.cdn.mozilla.net/fonts/zilla-slab.css" rel="stylesheet"> 
+        <link href="https://code.cdn.mozilla.net/fonts/fira.css" rel="stylesheet">
         <link rel="stylesheet" href="public/stylesheets/style.css">
     </head>
     <body>
-        <h1>Triage Status of Bugs in Firefox Components</h1>
+        <h1><span>Mozilla</span><br><span>Product Integrity</span></h1>
+        <h2>Triage Status of Bugs in Firefox Components</h2>
 
         <ul>
             <li>Reports</li>
+            <li><a href="#top">Top Components</a></li>
             <li><a href="#report">Triage Status</a></li>
             <li><a href="#date-report">Untriaged By Month Filed</a></li>
         </ul>
 
         <p>Open bugs filed since June 1st, 2016 without outstanding needinfo requests, and not filed by the intermittent test failure tools (links are to corresponding Bugzilla buglists.) Darker reds in `Untriaged` column indicate higher risk of blocking bugs (assuming 1 blocker per 50 bugs.)</p>
+
+        <table id="top" class="topReport">
+            <caption>Top components by untriaged bugs</caption>
+            <thead>
+                <th>Product: Component</th>
+                <th>Untriaged</th>
+            </thead>
+            <tbody class="topTmp">
+                <th>Loading<span class="wait-for-it">…</span></th>
+                <td></td>
+            </tbody>
+        </table>
 
         <table id="report" class="report">
             <caption>Distribution of bugs by triage status</caption>
@@ -59,6 +75,10 @@
             <tbody class="dateTmp">
                 <tr>
                     <th>Loading<span class="wait-for-it">…</span></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                 </tr>
             </tbody>
         </table>
