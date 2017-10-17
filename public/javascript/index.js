@@ -6,21 +6,33 @@
     // Bugzilla Products of interest
     var productList = [
           "Core"
+        , "External Software Affecting Firefox"
         , "Firefox"
-        , "Firefox for Android"
-        , "Firefox for iOS"
+        , "NPSR"
+        , "NSS"
         , "Toolkit"
     ];
+    var componentsToIgnore = [
+          "Build Config"
+    ];
+    var nComponentsToIgnore = componentsToIgnore.length;
     var encodedProductListFragment = productList.reduce((str, product) => str + `&product=${encodeURIComponent(product)}`, '');
-
-    // shared parameters
+    var encodedIgnoreListFragment = componentsToIgnore.reduce((str, component, i) => str + `&f${i+5}=component&o${i+5}=notequals&v${i+5}=${encodeURIComponent(component)}`,'');
+    
+    // shared query parameters
     var sharedParameters = Object.entries({
           'chfieldfrom': '2016-06-01',
-          'chfieldto': 'NOW', 
-          'f1': 'flagtypes.name',
-          'o1': 'notequals',
+          'chfieldto': 'NOW',
           'resolution': '---',
-          'v1': 'needinfo?',
+          'f2': 'short_desc',
+          'o2': 'notsubstring',
+          'o2': '[meta]',
+          'f3': 'bug_severity',
+          'o3': 'notequals',
+          'v3': 'enhancement', 
+          'f4': 'flagtypes.name',
+          'o4': 'notequals',
+          'v4': 'needinfo?',
           'email1': 'intermittent-bug-filer@mozilla.bugs',
           'emailtype1': 'notequals',
           'emailreporter1': 1
@@ -31,7 +43,8 @@
                          'include_fields=id,priority,product,component,creation_time' +
                          '&chfield=[Bug%20creation]' + 
                          encodedProductListFragment + sharedParameters + 
-                         '&o4=greaterthan&f4=bug_id&limit=' + limit;
+                         encodedIgnoreListFragment + 
+                         `&o1=greaterthan&f1=bug_id&limit=${limit}`;
 
     var reportDetailRequest = 'https://bugzilla.mozilla.org/buglist.cgi?chfield=[Bug%20creation]' +
         sharedParameters; 
@@ -68,7 +81,7 @@
 
     function getBugs(last) {
         var newLast;
-        fetch(baseAPIRequest + '&v4=' + last)
+        fetch(baseAPIRequest + '&v1=' + last)
             .then(function(response) { // $DEITY, I can't wait for await 
                 if (response.ok) {  
                     response.json()
